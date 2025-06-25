@@ -1,0 +1,15 @@
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.android.gms.ads.internal.** { *; }
+-keep class com.google.android.gms.ads.formats.** { *; }
+-keep class com.google.android.gms.ads.identifier.** { *; }
+-keep class com.google.android.gms.ads.mediation.** { *; }
+-keep class com.google.android.gms.ads.reward.** { *; }
+-keep class com.google.android.gms.ads.search.** { *; }
+-keep class com.google.android.gms.ads.appopen.** { *; }
+-keep class com.google.android.gms.ads.interstitial.** { *; }
+-keep class com.google.android.gms.ads.nativead.** { *; }
+-keep class com.google.android.gms.ads.rewarded.** { *; }
+-keep class com.google.android.gms.ads.rewardedinterstitial.** { *; }
+-keep public class com.google.android.gms.ads.AdActivity {*;}
+
+-dontwarn com.google.android.gms.ads.**
