@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/repositories/goods_repository.dart';
-import '../../core/repositories/machine_repository.dart';
-import '../../models/machine_name_model.dart';
+import '../../data/repositories/goods_repository.dart';
+import '../../data/repositories/machine_repository.dart';
+import '../../data/models/machine_name_model.dart';
 
 /// MachineName 리스트의 상태를 관리하는 ViewModel
 class MachineViewModel extends StateNotifier<AsyncValue<List<MachineName>>> {
@@ -43,10 +44,10 @@ class MachineViewModel extends StateNotifier<AsyncValue<List<MachineName>>> {
   }
 
   /// 새로운 기기를 추가하는 메소드
-  Future<void> addMachineName(String name, String icon, String type) async {
+  Future<void> addMachine(MachineName machine) async {
     try {
       await _machineRepository
-          .addMachineName(MachineName(machineName: name, refrigIcon: icon, machineType: type));
+          .addMachineName(machine);
       fetchMachineNames();
     } catch (e, s) {
       // 에러 처리 로직 (예: 사용자에게 알림)
@@ -55,7 +56,7 @@ class MachineViewModel extends StateNotifier<AsyncValue<List<MachineName>>> {
   }
 
   /// 기기 정보를 수정하는 메소드
-  Future<void> updateMachineName(MachineName machine) async {
+  Future<void> updateMachine(MachineName machine) async {
     try {
       await _machineRepository.updateMachineName(machine);
       fetchMachineNames();
@@ -64,13 +65,38 @@ class MachineViewModel extends StateNotifier<AsyncValue<List<MachineName>>> {
     }
   }
 
-  /// 기기를 삭제하는 메소드
-  Future<void> deleteMachineName(int id) async {
+  // /// 기기를 삭제하는 메소드
+  // Future<void> deleteMachine(int id, String machineName) async {
+  //   try {
+  //     await _goodsRepository.deleteGoodsByRefrigName(machineName);
+  //     await _machineRepository.deleteMachineName(id);
+  //     fetchMachineNames();
+  //   } catch (e, s) {
+  //     state = AsyncValue.error(e, s);
+  //   }
+  // }
+  // [수정!] 공간 삭제 로직에 디버깅 로그를 추가합니다.
+  Future<void> deleteMachine(int id, String machineName) async {
+    debugPrint("--- 공간 삭제 프로세스 시작: $machineName (ID: $id) ---");
     try {
+      // 1. 해당 공간에 속한 모든 음식 데이터를 먼저 삭제합니다.
+      debugPrint("1단계: '$machineName'에 속한 음식물 삭제 시작...");
+      final deletedRows = await _goodsRepository.deleteGoodsByRefrigName(machineName);
+      debugPrint("1단계 완료: $deletedRows 개의 음식물 데이터 삭제됨.");
+
+      // 2. 음식 데이터 삭제가 성공하면, 공간 자체를 삭제합니다.
+      debugPrint("2단계: '$machineName' 공간 자체 삭제 시작...");
       await _machineRepository.deleteMachineName(id);
+      debugPrint("2단계 완료: 공간 삭제 성공.");
+
+      // 3. 모든 DB 작업이 성공적으로 끝나면, UI를 새로고침합니다.
+      debugPrint("3단계: 공간 목록 새로고침 시작...");
       fetchMachineNames();
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
+      debugPrint("--- 공간 삭제 프로세스 성공 ---");
+    } catch (e, stack) {
+      debugPrint("!!! 공간 삭제 중 에러 발생: $e");
+      debugPrint(stack.toString());
+      state = AsyncValue.error(e, stack);
     }
   }
 }

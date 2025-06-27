@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/screen_size.dart';
+import '../../common/utils/screen_size.dart';
 
 class PopMenuSubMenu {
   static PopupMenuItem subMenu(String title, IconData icon, String itemValue) {

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/backup_restore_state.dart';
-import '../../utils/backup_restore.dart';
+import '../../common/utils/backup_restore.dart';
+import '../../data/models/backup_restore_state.dart';
 
 // [수정] StateNotifier가 관리하는 상태 타입을 bool이 아닌 BackupRestoreState로 변경합니다.
 class BackupRestoreViewModel extends StateNotifier<BackupRestoreStatus> {

@@ -1,63 +1,46 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// lib/presentation/viewmodels/dashboard_viewmodel.dart (최종 수정안)
 
-import '../../core/repositories/goods_repository.dart';
-import '../../core/repositories/machine_repository.dart';
-import '../../models/dashboard_state_model.dart';
-import '../../models/machine_name_model.dart';
-import '../../models/refrig_goods_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/dashboard_state_model.dart';
+import '../../data/repositories/goods_repository.dart';
 
 class DashboardViewModel extends StateNotifier<AsyncValue<DashboardState>> {
   final GoodsRepository _goodsRepository;
-  final MachineRepository _machineRepository; // MachineRepository 추가
 
-  // [수정] 생성자에서 MachineRepository를 받도록 변경
-  DashboardViewModel(this._goodsRepository, this._machineRepository) : super(const AsyncValue.loading()) {
+  DashboardViewModel(this._goodsRepository) : super(const AsyncLoading()) {
     fetchDashboardData();
   }
+
   Future<void> fetchDashboardData() async {
     state = const AsyncValue.loading();
     try {
-      // 1. 모든 음식과 모든 공간(machine) 정보를 병렬로 가져옵니다.
-      final allGoodsFuture = _goodsRepository.getAllGoods();
-      final allMachinesFuture = _machineRepository.getMachineNames();
-
-      final results = await Future.wait([allGoodsFuture, allMachinesFuture]);
-      
-      final allGoods = results[0] as List<Product>;
-      final allMachines = results[1] as List<MachineName>;
-
-      // 2. 공간 이름과 타입을 매핑하는 Map을 만듭니다.
-      final machineTypeMap = <String, String?>{};
-      for (var machine in allMachines) {
-        machineTypeMap[machine.machineName!] = machine.machineType;
-      }
-      
-      // 3. 기존의 소비기한 필터링 로직은 그대로 수행합니다.
+      final allGoods = await _goodsRepository.getAllGoods();
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final List<Product> expiringTodayList = [];
-      final List<Product> expiringSoonList = [];
 
-      for (var product in allGoods) {
-        if (product.useDate != null) {
-          final useDate = DateTime(product.useDate!.year, product.useDate!.month, product.useDate!.day);
-          final difference = useDate.difference(today).inDays;
+      // 소비기한이 3일 이내로 남은 상품들을 필터링합니다.
+      final imminentExpiryList = allGoods.where((p) {
+        if (p.useDate == null) return false;
+        final difference = p.useDate!.difference(today).inDays;
+        return difference >= 0 && difference <= 3;
+      }).toList();
 
-          if (difference == 0) {
-            expiringTodayList.add(product);
-          } else if (difference > 0 && difference <= 3) {
-            expiringSoonList.add(product);
-          }
-        }
-      }
-      
-      // 4. 최종적으로 모든 정보를 담은 DashboardState를 상태로 설정합니다.
-      state = AsyncValue.data(DashboardState(
-        expiringToday: expiringTodayList,
-        expiringSoon: expiringSoonList,
-        machineTypeMap: machineTypeMap, // 타입 맵 정보 포함
-      ));
+      // 구매한 지 30일이 넘은 상품들을 필터링합니다.
+      final longTermStorageList = allGoods.where((p) {
+        // p.inputDate가 null이면 이 상품은 계산에서 제외합니다.
+        if (p.inputDate == null) return false; 
+        
+        // inputDate가 null이 아님이 보장되므로, ! 연산자를 안전하게 사용할 수 있습니다.
+        final difference = today.difference(p.inputDate!).inDays;
+        return difference > 30;
+      }).toList();
 
+      state = AsyncValue.data(
+        DashboardState(
+          imminentExpiry: imminentExpiryList,
+          longTermStorage: longTermStorageList,
+        ),
+      );
     } catch (e, s) {
       state = AsyncValue.error(e, s);
     }

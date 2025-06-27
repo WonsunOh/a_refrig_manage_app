@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../models/refrig_goods_model.dart';
-import '../../providers/goods_providers.dart';
+import '../../data/models/product_model.dart';
+import '../../providers.dart';
 
 class QuickAddDialog extends ConsumerStatefulWidget {
   final String refrigName;

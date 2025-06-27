@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/repositories/goods_repository.dart';
-import '../../models/refrig_goods_model.dart';
+import '../../data/repositories/goods_repository.dart';
+import '../../data/models/product_model.dart';
 
 class GoodsViewModel extends StateNotifier<AsyncValue<Map<String, Map<String, List<Product>>>>> {
   final GoodsRepository _repository;

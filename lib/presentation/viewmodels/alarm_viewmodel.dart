@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/repositories/alarm_repository.dart';
-import '../../models/alam_model.dart';
-import '../../service/local_notification.dart';
+import '../../data/repositories/alarm_repository.dart';
+import '../../data/models/alam_model.dart';
+import '../../data/service/local_notification.dart';
 
 class AlarmViewModel extends StateNotifier<AsyncValue<List<Alam>>> {
   final AlarmRepository _repository;

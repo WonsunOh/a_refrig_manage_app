@@ -5,13 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 
-import '../../models/refrig_goods_model.dart';
-import '../../providers/dashboard_providers.dart';
-import '../../providers/goods_providers.dart';
-import '../../providers/long_term_storage_providers.dart';
-import '../../providers/machine_providers.dart';
-import '../../providers/remain_use_day_providers.dart';
-import '../../providers/ui_providers.dart';
+import '../../data/models/product_model.dart';
+import '../../data/models/view_mode.dart';
+import '../../providers.dart';
 import 'food_icon.dart';
 import 'goods_detail_bottomsheet.dart';
 import 'quick_add_dialog.dart';

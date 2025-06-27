@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/database/settings_state_model.dart';
-import '../../core/repositories/settings_repository.dart';
+import '../../data/datasources/settings_state_model.dart';
+import '../../data/repositories/settings_repository.dart';
 
 class SettingsViewModel extends StateNotifier<AsyncValue<SettingsState>> {
   final SettingsRepository _repository;

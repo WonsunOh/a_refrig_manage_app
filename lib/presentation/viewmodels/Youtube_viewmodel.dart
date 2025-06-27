@@ -1,25 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/repositories/youtube_repository.dart';
-import '../../models/youtube_model.dart';
+import '../../data/repositories/youtube_repository.dart';
+import '../../data/models/youtube_model.dart';
 
-class YoutubeSearchViewModel
-    extends StateNotifier<AsyncValue<List<YoutubeSearchResult>>> {
-  final YoutubeRepository _repository;
+class YouTubeViewModel extends StateNotifier<List<YouTubeModel>> {
+  final YouTubeRepository _repository;
 
-  YoutubeSearchViewModel(this._repository) : super(const AsyncValue.data([]));
+  YouTubeViewModel(this._repository) : super([]);
 
   Future<void> search(String query) async {
-    if (query.isEmpty) {
-      state = const AsyncValue.data([]);
-      return;
-    }
-    state = const AsyncValue.loading();
     try {
-      final results = await _repository.searchVideos(query);
-      state = AsyncValue.data(results);
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
+      final videos = await _repository.searchVideos(query);
+      state = videos;
+    } catch (e) {
+      // 에러 처리 (예: state를 빈 리스트로 만들거나, 별도 에러 상태 관리)
+      state = [];
     }
   }
 }

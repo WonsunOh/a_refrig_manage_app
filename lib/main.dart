@@ -13,19 +13,22 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/database/alam_db_helper.dart';
-import 'core/database/machine_name_db_helper.dart';
-import 'core/database/refrig_goods_db_helper.dart';
-import 'core/repositories/settings_repository.dart';
-import 'presentation/views/screens/bottom_navigation.dart';
-import 'presentation/views/screens/error_inquiry.dart';
-import 'presentation/views/screens/long_term_storage_food.dart';
-import 'presentation/views/screens/remain_useday.dart';
-import 'presentation/views/screens/settings_page.dart';
-import 'presentation/views/screens/splash_screen.dart';
-import 'presentation/views/screens/youtube.dart';
-import 'service/background_service.dart';
-import 'service/local_notification.dart';
+import 'common/theme/app_theme.dart';
+import 'data/datasources/alam_db_helper.dart';
+import 'data/datasources/machine_name_db_helper.dart';
+import 'data/datasources/refrig_goods_db_helper.dart';
+import 'data/repositories/settings_repository.dart';
+import 'presentation/screens/bottom_navigation.dart';
+import 'presentation/screens/error_inquiry.dart';
+import 'presentation/screens/long_term_storage_food.dart';
+import 'presentation/screens/remain_useday.dart';
+import 'presentation/screens/settings_page.dart';
+import 'presentation/screens/shopping_list_page.dart';
+import 'presentation/screens/splash_screen.dart';
+import 'presentation/screens/statistics_screen.dart';
+import 'presentation/screens/youtube_screen.dart';
+import 'data/service/background_service.dart';
+import 'data/service/local_notification.dart';
 
 void main() async {
   try {
@@ -113,34 +116,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // [수정] 기본 테마를 먼저 정의합니다.
-    final baseTheme = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.teal,
-        brightness: Brightness.light,
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.teal.shade400,
-        foregroundColor: Colors.white,
-        elevation: 2,
-      ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: Colors.orangeAccent,
-        foregroundColor: Colors.white,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-      ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.teal.shade400, // AppBar와 동일한 색상으로 통일감 부여
-        selectedItemColor: Colors.white, // 선택된 아이템 색상 (흰색)
-        unselectedItemColor: Colors.teal.shade100, // 선택되지 않은 아이템 색상 (연한 청록색)
-        elevation: 2,
-      ),
-    );
+    
     return GetMaterialApp(
       // 앱의 폰트의 크기를 기기에 상관없이 유지
       builder: (context, child) {
@@ -153,8 +129,8 @@ class MyApp extends StatelessWidget {
       },
       title: '스마트 냉장고',
       debugShowCheckedModeBanner: false,
-      theme: baseTheme.copyWith(
-        textTheme: GoogleFonts.notoSansKrTextTheme(baseTheme.textTheme),
+      theme: AppTheme.lightTheme.copyWith(
+        textTheme: GoogleFonts.notoSansKrTextTheme(AppTheme.lightTheme.textTheme),
       ),
 
       initialRoute: '/',
@@ -162,10 +138,12 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/', page: () => const SplashScreen()),
         GetPage(name: '/navi', page: () => const BottomNavigation()),        
         GetPage(name: '/remain', page: () => const RemainUseDay()),
-        GetPage(name: '/ysearch', page: () => const YouTubeSearch()),
+        GetPage(name: '/ysearch', page: () => const YouTubeScreen()),
         GetPage(name: '/longterm', page: () => const LongTermStorageFood()),
         GetPage(name: '/settings', page: () => const SettingsPage()),
         GetPage(name: '/ErrorInquiry', page: () => const ErrorInquiry()),
+        GetPage(name: '/shoppingList', page: () => const ShoppingListPage()),
+        GetPage(name: '/statistics', page: () => const StatisticsScreen()),
       ],
 
       // localization 선언

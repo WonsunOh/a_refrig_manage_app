@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/goods_providers.dart';
+import '../../providers.dart';
 import 'refrig_page_view_helpers.dart'; // 잠시 후 만들 헬퍼 파일
 
 // 이 위젯은 이제 Scaffold 없이, 순수하게 내용물만 그리는 역할을 합니다.

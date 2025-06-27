@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 
-import '../../adMob/memo_main_page.dart';
-import '../../providers/backup_restore_providers.dart';
-import '../../providers/ui_providers.dart';
-import '../viewmodels/backup_restore_viewmodel.dart';
-import '../views/screens/error_inquiry.dart';
-import '../views/screens/youtube.dart';
+import '../../providers.dart';
+import '../screens/memo/memo_main_screen.dart';
+import '../screens/error_inquiry.dart';
+import '../screens/youtube_screen.dart';
 
 // StatelessWidget을 ConsumerWidget으로 변경
 class MoreSubMenu extends ConsumerWidget {
@@ -69,7 +67,7 @@ class MoreSubMenu extends ConsumerWidget {
                 leading: const Icon(Icons.play_circle_outline),
                 title: const Text('유튜브 검색'),
                 onTap: () {
-                  Get.to(() => YouTubeSearch());
+                  Get.to(() => YouTubeScreen());
                 },
               ),
               ListTile(

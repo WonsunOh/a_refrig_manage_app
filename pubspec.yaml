@@ -61,6 +61,7 @@ dependencies:
   file_picker: 10.2.0
   flutter_phoenix: ^1.1.1
   animated_segmented_tab_control: ^2.0.0
+  fl_chart: 1.0.0
 
 
 dev_dependencies:
