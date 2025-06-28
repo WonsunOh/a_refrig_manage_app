@@ -4,7 +4,7 @@ import 'product_model.dart';
 
 class DashboardState {
   // [수정!] 숫자(count)가 아닌, 실제 Product 리스트를 상태로 가집니다.
-  final List<Product> imminentExpiry; // 소비기한 임박 상품 목록
+  final List<Product> imminentExpiry; // 사용예정일 임박 상품 목록
   final List<Product> longTermStorage; // 장기 보관 상품 목록
 
   DashboardState({

@@ -12,6 +12,7 @@ class Product {
   String? useAmount;
   String? unit;
   String? memo;
+  bool isLongTermStorage; // ✅ [추가] 장기보관 여부 필드
 
   Product({
     this.id,
@@ -27,6 +28,7 @@ class Product {
     this.useAmount,
     this.unit,
     this.memo,
+    this.isLongTermStorage = false, 
   });
 
   // [추가] copyWith 메소드
@@ -44,6 +46,7 @@ class Product {
     String? useAmount,
     String? unit,
     String? memo,
+    bool? isLongTermStorage,
   }) {
     return Product(
       id: id ?? this.id,
@@ -59,6 +62,7 @@ class Product {
       useAmount: useAmount ?? this.useAmount,
       unit: unit ?? this.unit,
       memo: memo ?? this.memo,
+      isLongTermStorage: isLongTermStorage ?? this.isLongTermStorage,
     );
   }
 
@@ -77,6 +81,8 @@ class Product {
       useAmount: json['useAmount'],
       unit: json['unit'],
       memo: json['memo'],
+      // DB에는 0 또는 1로 저장되므로, 불러올 때 boolean으로 변환
+      isLongTermStorage: json['isLongTermStorage'] == 1,
     );
   }
 
@@ -95,6 +101,7 @@ class Product {
       'useAmount': useAmount,
       'unit': unit,
       'memo': memo,
+      'isLongTermStorage': isLongTermStorage,
     };
   }
 }

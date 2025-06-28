@@ -42,7 +42,13 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
       color = Colors.orange.shade500;
     }
     return Chip(
-      label: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      label: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       backgroundColor: color,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
@@ -68,18 +74,22 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.1),
                   child: FoodIcon(iconIdentifier: product.iconAdress, size: 32),
                 ),
                 const SizedBox(width: 16),
                 Text(
-                        product.foodName ?? '이름 없음',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(width: 16),
-                      _buildDDayChip(),
+                  product.foodName ?? '이름 없음',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 16),
+                _buildDDayChip(),
                 // Expanded(
                 //   child: Column(
                 //     crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,12 +113,12 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Column(
-                
                 children: [
                   _buildInfoRow(
                     icon: Icons.kitchen_outlined,
                     title: '보관 위치',
-                    content: '${product.refrigName ?? '-'} / ${product.storageName ?? '-'}',
+                    content:
+                        '${product.refrigName ?? '-'} / ${product.storageName ?? '-'}',
                   ),
                   _buildInfoRow(
                     icon: Icons.inventory_2_outlined,
@@ -142,7 +152,11 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
   }
 
   // 아이콘, 제목, 내용을 포함하는 정보 행을 만드는 헬퍼 위젯
-  Widget _buildInfoRow({required IconData icon, required String title, required String content}) {
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -150,9 +164,15 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
         children: [
           Icon(icon, color: Colors.grey.shade600, size: 22),
           const SizedBox(width: 16),
-          Text(title, style: TextStyle(fontSize: 16, color: Colors.grey.shade800)),
+          Text(
+            title,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
+          ),
           const Spacer(),
-          Text(content, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(
+            content,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
@@ -171,18 +191,24 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
             date: product.inputDate,
           ),
           const SizedBox(width: 50),
-          _buildDateItem(
+          product.isLongTermStorage 
+          ? Text('장기보관식품')
+          : _buildDateItem(
             icon: Icons.event_busy_outlined,
-            title: '소비기한',
+            title: '사용예정일',
             date: product.useDate,
           ),
         ],
       ),
     );
   }
-  
+
   // 날짜 항목 하나를 만드는 헬퍼 위젯
-  Widget _buildDateItem({required IconData icon, required String title, required DateTime? date}) {
+  Widget _buildDateItem({
+    required IconData icon,
+    required String title,
+    required DateTime? date,
+  }) {
     return Row(
       children: [
         Icon(icon, color: Colors.grey.shade600, size: 22),
@@ -190,7 +216,10 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontSize: 16, color: Colors.grey.shade800)),
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
+            ),
             const SizedBox(height: 4),
             Text(
               date != null ? DateFormat('yyyy-MM-dd').format(date) : '-',
@@ -201,7 +230,7 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
       ],
     );
   }
-  
+
   // 메모 섹션을 만드는 헬퍼 위젯
   Widget _buildMemoSection() {
     return Row(
@@ -213,7 +242,10 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('메모', style: TextStyle(fontSize: 16, color: Colors.grey.shade800)),
+              Text(
+                '메모',
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade800),
+              ),
               const SizedBox(height: 8),
               Text(product.memo!, style: const TextStyle(fontSize: 16)),
             ],
@@ -233,10 +265,14 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
           icon: Icons.add_shopping_cart_outlined,
           label: '쇼핑 목록',
           onTap: () {
-            ref.read(shoppingListViewModelProvider.notifier).addItem(product.foodName!);
+            ref
+                .read(shoppingListViewModelProvider.notifier)
+                .addItem(product.foodName!);
             Get.back();
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("'${product.foodName}'을(를) 쇼핑 목록에 추가했습니다.")),
+              SnackBar(
+                content: Text("'${product.foodName}'을(를) 쇼핑 목록에 추가했습니다."),
+              ),
             );
           },
         ),
@@ -246,11 +282,14 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
           label: '수정',
           onTap: () {
             Get.back();
-            Get.to(() => const RefrigInput(), arguments: {
-              'refrigName': product.refrigName,
-              'product': product,
-              'machineType': machineType,
-            });
+            Get.to(
+              () => const RefrigInput(),
+              arguments: {
+                'refrigName': product.refrigName,
+                'product': product,
+                'machineType': machineType,
+              },
+            );
           },
         ),
         _buildActionButton(
@@ -264,16 +303,24 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
                 title: const Text('삭제 확인'),
                 content: Text("'${product.foodName}'을(를) 삭제하시겠습니까?"),
                 actions: [
-                  TextButton(onPressed: () => Get.back(result: false), child: const Text('취소')),
+                  TextButton(
+                    onPressed: () => Get.back(result: false),
+                    child: const Text('취소'),
+                  ),
                   TextButton(
                     onPressed: () => Get.back(result: true),
-                    child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                    child: const Text(
+                      '삭제',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
                 ],
               ),
             );
             if (shouldDelete == true && context.mounted) {
-              await ref.read(goodsViewModelProvider(product.refrigName!).notifier).deleteGood(product.id!);
+              await ref
+                  .read(goodsViewModelProvider(product.refrigName!).notifier)
+                  .deleteGood(product.id!);
               ref.invalidate(machineViewModelProvider);
               ref.invalidate(dashboardViewModelProvider);
               ref.invalidate(remainUseDayViewModelProvider);
@@ -287,7 +334,13 @@ class GoodsDetailBottomSheet extends ConsumerWidget {
     );
   }
 
-   Widget _buildActionButton({required BuildContext context, required IconData icon, required String label, required VoidCallback onTap, Color? color}) {
+  Widget _buildActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
     final themeColor = color ?? Theme.of(context).textTheme.bodyLarge?.color;
     return InkWell(
       onTap: onTap,

@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../providers.dart';
 
-
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -13,7 +12,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
-   @override
+  @override
   void initState() {
     super.initState();
     // 페이지가 처음 열릴 때 권한 상태를 확인합니다.
@@ -29,7 +28,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       await Permission.scheduleExactAlarm.request();
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final settingsState = ref.watch(settingsViewModelProvider);
@@ -48,6 +47,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         settingsNotifier.updateNotificationTime(newTime);
       }
     }
+
     final nowT = DateTime.now();
 
     return Scaffold(
@@ -59,22 +59,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           return ListView(
             children: [
               SwitchListTile(
-                title: const Text('소비기한 알림 받기'),
-                subtitle: const Text('매일 정해진 시간에 소비기한 만료 알림을 받습니다.'),
+                title: const Text('사용예정일 알림 받기'),
+                subtitle: const Text('매일 정해진 시간에 사용예정일 만료 알림을 받습니다.'),
                 value: settings.notificationsEnabled,
                 onChanged: (bool value) async {
                   if (value) {
                     await _checkAndRequestPermission();
                   }
                   settingsNotifier.updateNotificationSetting(value);
-          
                 },
               ),
               ListTile(
                 title: const Text('알림 시간 설정'),
-                subtitle: const Text(
-                  '시간을 지정하시면 매일 이 시간에 소비기한을 알려드려요. ',
-                ),
+                subtitle: const Text('시간을 지정하시면 매일 이 시간에 사용예정일을 알려드려요. '),
                 enabled: settings.notificationsEnabled,
                 onTap: () => selectTime(context), // ListTile 전체를 탭해도 동작
                 trailing: TextButton(

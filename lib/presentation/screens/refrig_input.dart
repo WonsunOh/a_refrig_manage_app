@@ -1,5 +1,3 @@
-// lib/presentation/screens/refrig_input.dart (최종 개선안)
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
@@ -25,6 +23,18 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
   late TextEditingController _amountController;
   late TextEditingController _memoController;
   late TextEditingController _containerController;
+  
+
+  // 단위 목록
+  final List<String> _unitOptions = [
+    '개',
+    'g',
+    'kg',
+    'mL',
+    'L',
+    '마리',
+    '직접 입력...',
+  ];
 
   Product? _editingProduct;
   late String _originalRefrigName;
@@ -37,6 +47,7 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
   DateTime _useDate = DateTime.now().add(const Duration(days: 7));
   String _selectedIcon = '🥩';
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
+   bool _isLongTermStorage = false;
 
   @override
   void initState() {
@@ -45,20 +56,26 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
     _editingProduct = args['product'];
 
     // 기존 데이터 로직은 그대로 유지
-    _originalRefrigName = args['refrigName'];
-    _selectedRefrigName = args['refrigName'];
+    _originalRefrigName = args['refrigName'] ?? '';
+    _selectedRefrigName = args['refrigName'] ?? '';
     _selectedMachineType = args['machineType'];
     _selectedStorageName = _editingProduct?.storageName ?? '냉장실';
     _selectedUnit = _editingProduct?.unit ?? '개';
 
-    _foodNameController = TextEditingController(text: _editingProduct?.foodName);
+    _foodNameController = TextEditingController(
+      text: _editingProduct?.foodName,
+    );
     _amountController = TextEditingController(text: _editingProduct?.amount);
     _memoController = TextEditingController(text: _editingProduct?.memo);
-    _containerController = TextEditingController(text: _editingProduct?.containerName);
-    
-     _inputDate = _editingProduct?.inputDate ?? DateTime.now();
-    _useDate = _editingProduct?.useDate ?? DateTime.now().add(const Duration(days: 7));
+    _containerController = TextEditingController(
+      text: _editingProduct?.containerName,
+    );
+
+    _inputDate = _editingProduct?.inputDate ?? DateTime.now();
+    _useDate =
+        _editingProduct?.useDate ?? DateTime.now().add(const Duration(days: 7));
     _selectedIcon = _editingProduct?.iconAdress ?? '🥩';
+    _isLongTermStorage = _editingProduct?.isLongTermStorage ?? false;
   }
 
   @override
@@ -102,13 +119,49 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
     }
   }
 
+  void _showAddUnitDialog() {
+    final unitController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('새 단위 추가'),
+        content: TextField(
+          controller: unitController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: '단위를 입력하세요'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('취소')),
+          TextButton(
+            onPressed: () {
+              final newUnit = unitController.text.trim();
+              if (newUnit.isNotEmpty && !_unitOptions.contains(newUnit)) {
+                setState(() {
+                  _unitOptions.insert(_unitOptions.length - 1, newUnit);
+                  _selectedUnit = newUnit;
+                });
+              }
+              Get.back();
+            },
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- Submit Logic ---
   // 기존 로직을 그대로 사용하여 안정성을 유지합니다.
   void _submit() async {
     if (_formKey.currentState!.validate()) {
-      final finalStorageName = _selectedMachineType == '냉장고' ? _selectedStorageName : '실온';
-      final finalContainerName = (_selectedMachineType == '냉장고' && _containerController.text.isNotEmpty)
-          ? _containerController.text : '기본칸';
+      final finalStorageName = _selectedMachineType == '냉장고'
+          ? _selectedStorageName
+          : '실온';
+      final finalContainerName =
+          (_selectedMachineType == '냉장고' &&
+              _containerController.text.isNotEmpty)
+          ? _containerController.text
+          : '기본칸';
 
       final productData = Product(
         id: _editingProduct?.id,
@@ -125,26 +178,30 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
       );
 
       if (_editingProduct != null) {
-        await ref.read(goodsViewModelProvider(_originalRefrigName).notifier).updateGood(productData);
+        await ref
+            .read(goodsViewModelProvider(_originalRefrigName).notifier)
+            .updateGood(productData);
         if (_originalRefrigName != _selectedRefrigName) {
           ref.invalidate(goodsViewModelProvider(_originalRefrigName));
           ref.invalidate(goodsViewModelProvider(_selectedRefrigName));
         }
       } else {
-        await ref.read(goodsViewModelProvider(_selectedRefrigName).notifier).addGood(productData);
+        await ref
+            .read(goodsViewModelProvider(_selectedRefrigName).notifier)
+            .addGood(productData);
       }
-      
+
       // 관련된 모든 요약/통계 Provider를 새로고침합니다.
       ref.invalidate(machineViewModelProvider);
       ref.invalidate(dashboardViewModelProvider);
       ref.invalidate(remainUseDayViewModelProvider);
       ref.invalidate(longTermStorageViewModelProvider);
       ref.invalidate(statisticsViewModelProvider); // 통계 Provider 추가
-      
+
       Get.back();
     }
   }
-  
+
   // --- Build Method ---
   @override
   Widget build(BuildContext context) {
@@ -153,6 +210,11 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_editingProduct != null ? '음식 수정' : '새로운 음식 추가'),
+        // actions: [
+        //   IconButton(icon: const Icon(Icons.save), 
+        //   iconSize: 25
+        //   onPressed: _submit),
+        //   ],
       ),
       body: allMachinesState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,8 +233,13 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
                       onTap: _showIconPicker,
                       child: CircleAvatar(
                         radius: 48,
-                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                        child: Text(_selectedIcon, style: const TextStyle(fontSize: 48)),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.1),
+                        child: Text(
+                          _selectedIcon,
+                          style: const TextStyle(fontSize: 48),
+                        ),
                       ),
                     ),
                   ),
@@ -184,8 +251,13 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
                     children: [
                       TextFormField(
                         controller: _foodNameController,
-                        decoration: const InputDecoration(labelText: '음식 이름 *', border: OutlineInputBorder()),
-                        validator: (value) => (value == null || value.isEmpty) ? '이름을 입력해주세요.' : null,
+                        decoration: const InputDecoration(
+                          labelText: '음식 이름 *',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) => (value == null || value.isEmpty)
+                            ? '이름을 입력해주세요.'
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -195,21 +267,42 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
                             flex: 2,
                             child: TextFormField(
                               controller: _amountController,
-                              decoration: const InputDecoration(labelText: '수량 *', border: OutlineInputBorder()),
+                              decoration: const InputDecoration(
+                                labelText: '수량 *',
+                                border: OutlineInputBorder(),
+                              ),
                               keyboardType: TextInputType.number,
-                              validator: (value) => (value == null || value.isEmpty) ? '수량을 입력해주세요.' : null,
+                              validator: (value) =>
+                                  (value == null || value.isEmpty)
+                                  ? '수량을 입력해주세요.'
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            flex: 1,
+                            flex: 2,
                             child: DropdownButtonFormField<String>(
                               value: _selectedUnit,
-                              decoration: const InputDecoration(border: OutlineInputBorder()),
-                              items: ['개', 'g', 'kg', 'mL', 'L', '조각', '마리']
-                                  .map((label) => DropdownMenuItem(value: label, child: Text(label)))
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                              items: _unitOptions
+                                  .map(
+                                    (label) => DropdownMenuItem(
+                                      value: label,
+                                      child: Text(label),
+                                    ),
+                                  )
                                   .toList(),
-                              onChanged: (value) => setState(() => _selectedUnit = value),
+                              onChanged: (String? newValue) {
+                                if (newValue == '직접 입력...') {
+                                  _showAddUnitDialog();
+                                } else {
+                                  setState(() {
+                                    _selectedUnit = newValue!;
+                                  });
+                                }
+                              },
                             ),
                           ),
                         ],
@@ -230,7 +323,7 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
                     title: '날짜',
                     children: [_buildDateSelectionRow(context)],
                   ),
-                  
+
                   // --- 메모 카드 ---
                   _buildSectionCard(
                     title: '메모',
@@ -253,7 +346,10 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
                     label: const Text('저장하기'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -266,15 +362,25 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
   }
 
   // --- UI Builder Widgets ---
+
   
-  Widget _buildSectionCard({required String title, required List<Widget> children}) {
+
+  Widget _buildSectionCard({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const Divider(height: 24),
             ...children,
           ],
@@ -287,15 +393,25 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
     return [
       DropdownButtonFormField<String>(
         value: _selectedRefrigName,
-        decoration: const InputDecoration(labelText: '저장 공간', border: OutlineInputBorder()),
+        decoration: const InputDecoration(
+          labelText: '저장 공간',
+          border: OutlineInputBorder(),
+        ),
         items: machines
-            .map((machine) => DropdownMenuItem(value: machine.machineName, child: Text(machine.machineName!)))
+            .map(
+              (machine) => DropdownMenuItem(
+                value: machine.machineName,
+                child: Text(machine.machineName!),
+              ),
+            )
             .toList(),
         onChanged: (value) {
           if (value != null) {
             setState(() {
               _selectedRefrigName = value;
-              final selectedMachine = machines.firstWhere((m) => m.machineName == value);
+              final selectedMachine = machines.firstWhere(
+                (m) => m.machineName == value,
+              );
               _selectedMachineType = selectedMachine.machineType;
               _selectedStorageName = '냉장실';
             });
@@ -305,7 +421,10 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
       const SizedBox(height: 16),
       DropdownButtonFormField<String>(
         value: _selectedStorageName,
-        decoration: const InputDecoration(labelText: '보관 장소', border: OutlineInputBorder()),
+        decoration: const InputDecoration(
+          labelText: '보관 장소',
+          border: OutlineInputBorder(),
+        ),
         items: ['냉장실', '냉동실']
             .map((label) => DropdownMenuItem(value: label, child: Text(label)))
             .toList(),
@@ -314,7 +433,10 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
       const SizedBox(height: 16),
       TextFormField(
         controller: _containerController,
-        decoration: const InputDecoration(labelText: '보관 칸 이름 (예: 신선칸)', border: OutlineInputBorder()),
+        decoration: const InputDecoration(
+          labelText: '보관 칸 이름 (예: 신선칸)',
+          border: OutlineInputBorder(),
+        ),
       ),
     ];
   }
@@ -329,46 +451,93 @@ class _RefrigInputState extends ConsumerState<RefrigInput> {
   }
 
   Widget _buildDateSelectionRow(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: InkWell(
-            onTap: () => _selectDate(context, true),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: '구매일',
-                border: OutlineInputBorder(),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_dateFormat.format(_inputDate)),
-                  const Icon(Icons.calendar_today_outlined, size: 20),
-                ],
-              ),
-            ),
-          ),
-        ),
+        _buildBuyDateField(context),
+         const SizedBox(width: 16),
+         _buildLongTermStorageCheckbox(),
         const SizedBox(width: 16),
-        Expanded(
-          child: InkWell(
-            onTap: () => _selectDate(context, false),
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: '소비기한',
-                border: OutlineInputBorder(),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_dateFormat.format(_useDate)),
-                  const Icon(Icons.calendar_today_outlined, size: 20),
-                ],
-              ),
-            ),
-          ),
-        ),
+         _buildUseByDateField(context),
+        // InkWell(
+        //   onTap: () => _selectDate(context, false),
+        //   child: InputDecorator(
+        //     decoration: const InputDecoration(
+        //       labelText: '사용예정일',
+        //       border: OutlineInputBorder(),
+        //     ),
+        //     child: Row(
+        //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //       children: [
+        //         Text(_dateFormat.format(_useDate)),
+        //         const Icon(Icons.calendar_today_outlined, size: 20),
+        //       ],
+        //     ),
+        //   ),
+        // ),
+      
       ],
+    );
+  }
+
+  Widget _buildBuyDateField(BuildContext context) {
+    return InkWell(
+      onTap: () => _selectDate(context, true),
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: '구매일',
+          border: OutlineInputBorder(),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(_dateFormat.format(_inputDate)),
+                  const Icon(Icons.calendar_today_outlined, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLongTermStorageCheckbox() {
+    return CheckboxListTile(
+      title: const Text('장기보관 음식 (사용예정일 없음)'),
+      value: _isLongTermStorage,
+      onChanged: (bool? value) {
+        setState(() => _isLongTermStorage = value!);
+      },
+      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding: EdgeInsets.zero,
+      activeColor: Theme.of(context).primaryColor,
+    );
+  }
+
+  Widget _buildUseByDateField(BuildContext context) {
+    return InkWell(
+      // ✅ 장기보관 체크 시 탭 비활성화
+      onTap: _isLongTermStorage ? null : () => _selectDate(context, false),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: '사용예정일', // ✅ 용어 변경
+          border: const OutlineInputBorder(),
+          // ✅ 장기보관 체크 시 비활성화된 것처럼 보이게 처리
+          filled: _isLongTermStorage,
+          fillColor: Colors.grey.shade200,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text(_dateFormat.format(_useDate),
+            style: TextStyle(
+                color: _isLongTermStorage ? Colors.grey.shade500 : Colors.black,
+              ),),
+            Icon(
+              Icons.calendar_today_outlined,
+              color: _isLongTermStorage ? Colors.grey.shade500 : Colors.black,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

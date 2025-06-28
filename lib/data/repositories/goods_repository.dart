@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../presentation/viewmodels/statistics_viewmodel.dart';
 import '../models/product_model.dart';
 import '../datasources/refrig_goods_db_helper.dart';
 
@@ -31,14 +32,13 @@ class GoodsRepository {
     return await _dbHelper.deleteGoodsByRefrigName(refrigName);
   }
 
-
   // [신규] 특정 냉장고의 전체 품목 수를 가져오는 메소드
   Future<int> getGoodsCount(String refrigName) async {
     final goods = await _dbHelper.getGoods(refrigName);
     return goods.length;
   }
 
-  // [신규] 특정 냉장고의 소비기한 임박 품목 수를 가져오는 메소드
+  // [신규] 특정 냉장고의 사용예정일 임박 품목 수를 가져오는 메소드
   Future<int> getExpiringSoonCount(
     String refrigName, {
     int thresholdDays = 3,
@@ -82,76 +82,103 @@ class GoodsRepository {
 
   // [추가] 월별 소비량 통계
   // 월별로 'useAmount'가 1 이상인 (소비된) 상품의 수를 계산합니다.
-  Future<Map<String, int>> getMonthlyConsumptionStats() async {
+  // ✅ [수정] 월별 소비량 통계 메소드에 period 인자 추가
+  Future<Map<String, int>> getMonthlyConsumptionStats({
+    required StatisticsPeriod period,
+  }) async {
     final db = await _dbHelper.database;
-    // 'inputDate'를 'YYYY-MM' 형식으로 자르고, 이 형식으로 그룹화하여 각 그룹의 개수를 셉니다.
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-    SELECT
-      strftime('%Y-%m', inputDate) as month,
-      COUNT(*) as count
-    FROM RefrigGoods
-    WHERE useAmount IS NOT NULL AND CAST(useAmount AS INTEGER) > 0
-    GROUP BY month
-    ORDER BY month DESC
-  ''');
+    final startDate = _getStartDate(period);
+
+    // 'useAmount'가 있고, 구매일(inputDate)이 시작일 이후인 데이터만 집계
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
+      SELECT strftime('%Y-%m', inputDate) as month, COUNT(*) as count
+      FROM RefrigGoods
+      WHERE useAmount IS NOT NULL AND CAST(useAmount AS INTEGER) > 0 AND date(inputDate) >= date(?)
+      GROUP BY month
+      ORDER BY month DESC
+    ''',
+      [startDate],
+    );
 
     return {for (var map in maps) map['month'] as String: map['count'] as int};
   }
 
   // [추가] 가장 많이 구매한 상품 TOP 5
   // 'foodName'으로 그룹화하여 가장 많이 등장하는 상품 5개를 가져옵니다.
+  // ✅ [수정] 가장 많이 구매한 상품 TOP 5 메소드에 period 인자 추가
   Future<List<Map<String, dynamic>>> getTopPurchasedItems({
+    required StatisticsPeriod period,
     int limit = 5,
   }) async {
     final db = await _dbHelper.database;
+    final startDate = _getStartDate(period);
+
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
-    SELECT
-      foodName,
-      COUNT(*) as count
-    FROM RefrigGoods
-    GROUP BY foodName
-    ORDER BY count DESC
-    LIMIT ?
-  ''',
-      [limit],
+      SELECT foodName, COUNT(*) as count
+      FROM RefrigGoods
+      WHERE date(inputDate) >= date(?)
+      GROUP BY foodName
+      ORDER BY count DESC
+      LIMIT ?
+    ''',
+      [startDate, limit],
     );
 
     return maps;
   }
 
-  // [추가] 소비 습관 통계 (소비기한 내/만료)
-  // 소비기한(useDate)과 현재 날짜를 비교하여 소비/만료된 상품 수를 계산합니다.
-  Future<Map<String, int>> getConsumptionHabitStats() async {
+  // [추가] 소비 습관 통계 (사용예정일 내/만료)
+  // 사용예정일(useDate)과 현재 날짜를 비교하여 소비/만료된 상품 수를 계산합니다.
+  // ✅ [수정] 소비 습관 통계 메소드에 period 인자 추가
+  Future<Map<String, int>> getConsumptionHabitStats({
+    required StatisticsPeriod period,
+  }) async {
     final db = await _dbHelper.database;
     final today = DateTime.now().toIso8601String().substring(0, 10);
+    final startDate = _getStartDate(period);
 
-    // 소비기한 내에 소비한 상품 수
+    // 사용예정일 내에 소비한 상품 수
     final consumedOnTimeResult = await db.rawQuery(
       '''
-    SELECT COUNT(*) as count
-    FROM RefrigGoods
-    WHERE useAmount IS NOT NULL AND CAST(useAmount AS INTEGER) > 0
-    AND useDate >= ?
-  ''',
-      [today],
+      SELECT COUNT(*) as count
+      FROM RefrigGoods
+      WHERE useAmount IS NOT NULL AND CAST(useAmount AS INTEGER) > 0 AND date(useDate) >= date(?) AND date(inputDate) >= date(?)
+    ''',
+      [today, startDate],
     );
     final int consumedOnTime = Sqflite.firstIntValue(consumedOnTimeResult) ?? 0;
 
-    // 소비기한이 지나 만료된 (소비되지 않은) 상품 수
+    // 사용예정일이 지나 만료된 (소비되지 않은) 상품 수
     final expiredResult = await db.rawQuery(
       '''
-    SELECT COUNT(*) as count
-    FROM RefrigGoods
-    WHERE (useAmount IS NULL OR CAST(useAmount AS INTEGER) = 0)
-    AND useDate < ?
-  ''',
-      [today],
+      SELECT COUNT(*) as count
+      FROM RefrigGoods
+      WHERE (useAmount IS NULL OR CAST(useAmount AS INTEGER) = 0) AND date(useDate) < date(?) AND date(inputDate) >= date(?)
+    ''',
+      [today, startDate],
     );
     final int expired = Sqflite.firstIntValue(expiredResult) ?? 0;
 
     return {'consumedOnTime': consumedOnTime, 'expired': expired};
   }
 
-
+  // ✅ [추가] 기간에 따른 시작 날짜를 계산하는 private 헬퍼 메소드
+  String _getStartDate(StatisticsPeriod period) {
+    final now = DateTime.now();
+    DateTime startDate;
+    switch (period) {
+      case StatisticsPeriod.quarterly:
+        startDate = DateTime(now.year, now.month - 3, now.day);
+        break;
+      case StatisticsPeriod.yearly:
+        startDate = DateTime(now.year, 1, 1);
+        break;
+      case StatisticsPeriod.monthly:
+        startDate = DateTime(now.year, now.month - 1, now.day);
+        break;
+    }
+    return startDate.toIso8601String().substring(0, 10);
+  }
 }

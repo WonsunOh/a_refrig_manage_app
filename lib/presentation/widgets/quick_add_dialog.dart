@@ -45,7 +45,9 @@ class _QuickAddDialogState extends ConsumerState<QuickAddDialog> {
         useDate: _useDate,
       );
 
-      ref.read(goodsViewModelProvider(widget.refrigName).notifier).addGood(newProduct);
+      ref
+          .read(goodsViewModelProvider(widget.refrigName).notifier)
+          .addGood(newProduct);
       Navigator.of(context).pop(); // 다이얼로그 닫기
     }
   }
@@ -72,7 +74,7 @@ class _QuickAddDialogState extends ConsumerState<QuickAddDialog> {
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text("소비기한"),
+              title: const Text("사용예정일"),
               subtitle: Text(_dateFormat.format(_useDate)),
               onTap: () async {
                 final pickedDate = await showDatePicker(
@@ -92,7 +94,10 @@ class _QuickAddDialogState extends ConsumerState<QuickAddDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('취소')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
         ElevatedButton(onPressed: _submit, child: const Text('저장')),
       ],
     );

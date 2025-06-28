@@ -18,11 +18,11 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // [수정!] MyHomeScreen을 위한 라우팅을 명시적으로 추가합니다.
     // 이는 MyHomeScreen이 GetX 라우팅 테이블에 등록되어 있지 않을 경우를 대비합니다.
-    final routes = {
-      '/myHome': (context) => const MyHome(),
-      // 다른 라우트들...
-    };
-    
+    // final routes = {
+    //   '/myHome': (context) => const MyHome(),
+    //   // 다른 라우트들...
+    // };
+
     final dashboardState = ref.watch(dashboardViewModelProvider);
     final machineState = ref.watch(machineViewModelProvider);
 
@@ -38,7 +38,13 @@ class DashboardScreen extends ConsumerWidget {
               expandedHeight: 200.0,
               pinned: true,
               flexibleSpace: FlexibleSpaceBar(
-                title: Text('나의 스마트 냉장고', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                title: Text(
+                  '나의 스마트 냉장고',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -47,17 +53,25 @@ class DashboardScreen extends ConsumerWidget {
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  child: const Center(child: Icon(Icons.kitchen_rounded, color: Colors.white54, size: 100)),
+                  child: const Center(
+                    child: Icon(
+                      Icons.kitchen_rounded,
+                      color: Colors.white54,
+                      size: 100,
+                    ),
+                  ),
                 ),
               ),
             ),
-            
+
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: dashboardState.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, s) => const Center(child: Text('요약 정보를 불러올 수 없습니다.')),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, s) =>
+                      const Center(child: Text('요약 정보를 불러올 수 없습니다.')),
                   data: (summary) {
                     return GridView.count(
                       crossAxisCount: 2,
@@ -65,12 +79,12 @@ class DashboardScreen extends ConsumerWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.5,
+                      childAspectRatio: 1.3,
                       children: [
                         // [수정!] summary.imminentExpiry.length 와 같이 리스트의 길이를 사용합니다.
                         _buildSummaryCard(
                           context,
-                          title: '소비기한 임박',
+                          title: '사용예정일 임박',
                           count: summary.imminentExpiry.length,
                           icon: Icons.warning_amber_rounded,
                           color: Colors.orange.shade700,
@@ -82,7 +96,8 @@ class DashboardScreen extends ConsumerWidget {
                           count: summary.longTermStorage.length,
                           icon: Icons.inventory_2_outlined,
                           color: Colors.brown.shade600,
-                          onTap: () => Get.to(() => const LongTermStorageFood()),
+                          onTap: () =>
+                              Get.to(() => const LongTermStorageFood()),
                         ),
                         _buildSummaryCard(
                           context,
@@ -90,7 +105,8 @@ class DashboardScreen extends ConsumerWidget {
                           count: null, // 레시피는 개수가 없음
                           icon: Icons.restaurant_menu,
                           color: Colors.green.shade600,
-                          onTap: () => Get.to(() => const RecipeSuggestionScreen()),
+                          onTap: () =>
+                              Get.to(() => const RecipeSuggestionScreen()),
                         ),
                         _buildSummaryCard(
                           context,
@@ -113,40 +129,91 @@ class DashboardScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('나의 공간', style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      '나의 공간',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                     TextButton(
                       onPressed: () => Get.to(() => const MyHome()),
                       child: const Text('전체 보기'),
-                    )
+                    ),
                   ],
                 ),
               ),
             ),
             machineState.when(
-              loading: () => const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
-              error: (e, s) => const SliverFillRemaining(child: Center(child: Text('공간 목록을 불러올 수 없습니다.'))),
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, s) => const SliverFillRemaining(
+                child: Center(child: Text('공간 목록을 불러올 수 없습니다.')),
+              ),
               data: (machines) {
                 if (machines.isEmpty) {
-                  return const SliverFillRemaining(child: Center(child: Text('새 공간을 추가해보세요.')));
+                  return SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 48.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_home_work_outlined,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            '새로운 공간을 추가해보세요',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(color: Colors.grey.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "오른쪽 위 '전체 보기'를 눌러\n공간 관리 화면으로 이동할 수 있습니다.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
                 return SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final machine = machines[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 6.0,
+                        ),
                         child: ListTile(
-                          leading: CircleAvatar(child: Text(machine.refrigIcon ?? '📦')),
-                          title: Text(machine.machineName ?? '이름 없음', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('총 ${machine.totalItemCount ?? 0}개 | 소비임박 ${machine.expiringItemCount ?? 0}개'),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                          leading: CircleAvatar(
+                            child: Text(machine.refrigIcon ?? '📦'),
+                          ),
+                          title: Text(
+                            machine.machineName ?? '이름 없음',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '총 ${machine.totalItemCount ?? 0}개 | 소비임박 ${machine.expiringItemCount ?? 0}개',
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                          ),
                           onTap: () {
-                             Get.to(() => const MyHome(), arguments: {'initialIndex': index});
+                            Get.to(
+                              () => const MyHome(),
+                              arguments: {'initialIndex': index},
+                            );
                           },
                         ),
                       );
                     },
-                    childCount: machines.length > 3 ? 3 : machines.length, // 최대 3개까지만 보여줌
+                    childCount: machines.length > 3
+                        ? 3
+                        : machines.length, // 최대 3개까지만 보여줌
                   ),
                 );
               },
@@ -181,9 +248,23 @@ class DashboardScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   if (count != null)
-                    Text('$count 개', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$count 개',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                 ],
               ),
             ],

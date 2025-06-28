@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../providers.dart';
 import '../widgets/kebab_menu.dart';
+import '../widgets/machine_input_dialog.dart';
 import '../widgets/space_action_bottom_sheet.dart';
 import '../widgets/space_detail_page_content.dart';
 import 'refrig_input.dart';
@@ -103,22 +104,25 @@ class MyHome extends ConsumerWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_home_work_outlined, size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 24),
-            Text(
-              '아직 생성된 공간이 없어요',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '오른쪽 위 메뉴 버튼(⋮)을 눌러\n새로운 저장 공간을 추가해보세요!',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
-            ),
-          ],
+        child: GestureDetector(
+          onTap: () => Get.to(() => const MachineNameInputDialog()),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_home_work_outlined, size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 24),
+              Text(
+                '아직 생성된 공간이 없어요',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '오른쪽 위 메뉴 버튼(⋮)을 눌러\n새로운 저장 공간을 추가해보세요!',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+              ),
+            ],
+          ),
         ),
       ),
     );

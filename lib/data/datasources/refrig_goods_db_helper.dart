@@ -47,7 +47,8 @@ class RefrigGoodsDBHelper {
         useAmount TEXT,
         unit TEXT,
         memo TEXT,
-        containerName TEXT
+        containerName TEXT,
+        isLongTermStorage INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }

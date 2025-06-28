@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers.dart';
+import '../viewmodels/statistics_viewmodel.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -21,19 +22,25 @@ class StatisticsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => viewModel.fetchAllStats(),
+            onPressed: () => viewModel.fetchAllStats(statsState.period),
             tooltip: '새로고침',
           ),
         ],
       ),
       // RefreshIndicator를 사용하여 아래로 당겨서 새로고침 기능을 구현합니다.
       body: RefreshIndicator(
-        onRefresh: () => viewModel.fetchAllStats(),
+        onRefresh: () => viewModel.fetchAllStats(statsState.period),
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+            // ✅ [추가] 기간을 선택하는 SegmentedButton
+            _buildPeriodFilter(context, ref, statsState.period),
+            const SizedBox(height: 24),
             // 1. 월별 소비량 카드
-            _buildMonthlyConsumptionCard(context, statsState.monthlyConsumption),
+            _buildMonthlyConsumptionCard(
+              context,
+              statsState.monthlyConsumption,
+            ),
             const SizedBox(height: 24),
 
             // 2. 소비 습관 카드 (파이 차트)
@@ -49,7 +56,10 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   // 월별 소비량 막대 차트 위젯
-  Widget _buildMonthlyConsumptionCard(BuildContext context, AsyncValue<Map<String, int>> monthlyConsumption) {
+  Widget _buildMonthlyConsumptionCard(
+    BuildContext context,
+    AsyncValue<Map<String, int>> monthlyConsumption,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -63,7 +73,8 @@ class StatisticsScreen extends ConsumerWidget {
             // AsyncValue의 when을 사용하여 로딩/에러/데이터 상태를 처리합니다.
             monthlyConsumption.when(
               data: (data) {
-                if (data.isEmpty) return const Center(child: Text('소비 기록이 없습니다.'));
+                if (data.isEmpty)
+                  return const Center(child: Text('소비 기록이 없습니다.'));
                 // 차트 데이터 생성
                 final barGroups = data.entries.map((entry) {
                   final monthIndex = int.parse(entry.key.split('-')[1]);
@@ -74,7 +85,7 @@ class StatisticsScreen extends ConsumerWidget {
                         toY: entry.value.toDouble(),
                         color: Theme.of(context).primaryColor,
                         width: 16,
-                        borderRadius: BorderRadius.circular(4)
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ],
                   );
@@ -90,22 +101,36 @@ class StatisticsScreen extends ConsumerWidget {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            getTitlesWidget: (value, meta) => Text('${value.toInt()}월'),
-                            reservedSize: 28
+                            getTitlesWidget: (value, meta) =>
+                                Text('${value.toInt()}월'),
+                            reservedSize: 28,
                           ),
                         ),
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 28)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 28,
+                          ),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                       borderData: FlBorderData(show: false),
-                      gridData: const FlGridData(show: true, drawVerticalLine: false)
+                      gridData: const FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                      ),
                     ),
                   ),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('데이터를 불러올 수 없습니다: $err')),
+              error: (err, stack) =>
+                  Center(child: Text('데이터를 불러올 수 없습니다: $err')),
             ),
           ],
         ),
@@ -114,7 +139,10 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   // 소비 습관 파이 차트 위젯
-  Widget _buildConsumptionHabitCard(BuildContext context, AsyncValue<Map<String, int>> consumptionHabits) {
+  Widget _buildConsumptionHabitCard(
+    BuildContext context,
+    AsyncValue<Map<String, int>> consumptionHabits,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -132,7 +160,7 @@ class StatisticsScreen extends ConsumerWidget {
                 if (consumedOnTime == 0 && expired == 0) {
                   return const Center(child: Text('분석할 데이터가 없습니다.'));
                 }
-                
+
                 return Row(
                   children: [
                     SizedBox(
@@ -146,14 +174,20 @@ class StatisticsScreen extends ConsumerWidget {
                               value: consumedOnTime,
                               title: '${consumedOnTime.toInt()}',
                               radius: 50,
-                              titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              titleStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                             PieChartSectionData(
                               color: Colors.red,
                               value: expired,
                               title: '${expired.toInt()}',
                               radius: 50,
-                              titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              titleStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                           sectionsSpace: 2,
@@ -169,16 +203,17 @@ class StatisticsScreen extends ConsumerWidget {
                         children: [
                           _buildLegend(color: Colors.green, text: '기간 내 소비'),
                           const SizedBox(height: 8),
-                          _buildLegend(color: Colors.red, text: '소비기한 만료'),
+                          _buildLegend(color: Colors.red, text: '사용예정일 만료'),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('데이터를 불러올 수 없습니다: $err')),
-            )
+              error: (err, stack) =>
+                  Center(child: Text('데이터를 불러올 수 없습니다: $err')),
+            ),
           ],
         ),
       ),
@@ -187,15 +222,20 @@ class StatisticsScreen extends ConsumerWidget {
 
   // 파이 차트 범례 위젯
   Widget _buildLegend({required Color color, required String text}) {
-    return Row(children: [
-      Container(width: 16, height: 16, color: color),
-      const SizedBox(width: 8),
-      Text(text),
-    ]);
+    return Row(
+      children: [
+        Container(width: 16, height: 16, color: color),
+        const SizedBox(width: 8),
+        Text(text),
+      ],
+    );
   }
 
   // 가장 많이 구매한 상품 리스트 위젯
-  Widget _buildTopPurchasedItemsCard(BuildContext context, AsyncValue<List<Map<String, dynamic>>> topItems) {
+  Widget _buildTopPurchasedItemsCard(
+    BuildContext context,
+    AsyncValue<List<Map<String, dynamic>>> topItems,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -204,11 +244,15 @@ class StatisticsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('가장 많이 산 상품 TOP 5', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              '가장 많이 산 상품 TOP 5',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 10),
             topItems.when(
               data: (items) {
-                if (items.isEmpty) return const Center(child: Text('구매 기록이 없습니다.'));
+                if (items.isEmpty)
+                  return const Center(child: Text('구매 기록이 없습니다.'));
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -224,10 +268,39 @@ class StatisticsScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('데이터를 불러올 수 없습니다: $err')),
+              error: (err, stack) =>
+                  Center(child: Text('데이터를 불러올 수 없습니다: $err')),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ✅ [추가] 기간 필터 위젯
+  Widget _buildPeriodFilter(
+    BuildContext context,
+    WidgetRef ref,
+    StatisticsPeriod selectedPeriod,
+  ) {
+    return SegmentedButton<StatisticsPeriod>(
+      segments: const <ButtonSegment<StatisticsPeriod>>[
+        ButtonSegment(value: StatisticsPeriod.monthly, label: Text('1개월')),
+        ButtonSegment(value: StatisticsPeriod.quarterly, label: Text('3개월')),
+        ButtonSegment(value: StatisticsPeriod.yearly, label: Text('올해')),
+      ],
+      selected: <StatisticsPeriod>{selectedPeriod},
+      onSelectionChanged: (Set<StatisticsPeriod> newSelection) {
+        // ViewModel의 setPeriod 메소드를 호출하여 상태를 변경하고 데이터를 다시 불러옵니다.
+        ref
+            .read(statisticsViewModelProvider.notifier)
+            .setPeriod(newSelection.first);
+      },
+      style: SegmentedButton.styleFrom(
+        backgroundColor: Colors.grey[200],
+        foregroundColor: Colors.blue,
+        selectedForegroundColor: Colors.white,
+        selectedBackgroundColor: Colors.blue,
       ),
     );
   }

@@ -14,7 +14,14 @@ class ShoppingListViewModel extends StateNotifier<List<ShoppingItem>> {
   }
 
   Future<void> loadItems() async {
-    state = await _dbHelper.getItems();
+    final items = await _dbHelper.getItems();
+  // ✅ [추가] 정렬 로직
+    // isChecked가 false인 것(아직 구매 안 한 것)이 위로, true인 것(구매한 것)이 아래로 오도록 정렬
+    items.sort((a, b) {
+      if (a.isChecked == b.isChecked) return 0; // 둘 다 체크됐거나 안 됐으면 순서 유지
+      return a.isChecked ? 1 : -1; // a가 체크됐으면 뒤로, 아니면 앞으로
+    });
+    state = items;
   }
 
   Future<void> addItem(String name) async {

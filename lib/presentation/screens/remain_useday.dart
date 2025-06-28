@@ -26,21 +26,23 @@ class RemainUseDay extends ConsumerWidget {
     final expiringFoodsState = ref.watch(remainUseDayViewModelProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('소비기한 임박!'),
-      ),
+      appBar: AppBar(title: const Text('사용예정일 임박!')),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(remainUseDayViewModelProvider),
         child: expiringFoodsState.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다: $err')),
+          error: (err, stack) =>
+              Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다: $err')),
           data: (foods) {
             if (foods.isEmpty) {
               return _buildEmptyList();
             }
 
             // [핵심 수정] D-Day 별로 음식을 그룹화합니다.
-            final groupedFoods = groupBy(foods, (Product p) => _calculateDDay(p.useDate));
+            final groupedFoods = groupBy(
+              foods,
+              (Product p) => _calculateDDay(p.useDate),
+            );
             // D-Day가 빠른 순서대로 그룹을 정렬합니다.
             final sortedKeys = groupedFoods.keys.toList()..sort();
 
@@ -50,7 +52,12 @@ class RemainUseDay extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final dDay = sortedKeys[index];
                 final productsInGroup = groupedFoods[dDay]!;
-                return _buildGroupedListItem(context, ref, dDay, productsInGroup);
+                return _buildGroupedListItem(
+                  context,
+                  ref,
+                  dDay,
+                  productsInGroup,
+                );
               },
             );
           },
@@ -60,7 +67,12 @@ class RemainUseDay extends ConsumerWidget {
   }
 
   // D-Day별로 그룹화된 목록을 만드는 위젯
-  Widget _buildGroupedListItem(BuildContext context, WidgetRef ref, int dDay, List<Product> products) {
+  Widget _buildGroupedListItem(
+    BuildContext context,
+    WidgetRef ref,
+    int dDay,
+    List<Product> products,
+  ) {
     final dDayInfo = _getDDayInfo(dDay);
 
     return Card(
@@ -81,14 +93,18 @@ class RemainUseDay extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: dDayInfo.color, size: 20),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: dDayInfo.color,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   dDayInfo.text,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: dDayInfo.color,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: dDayInfo.color,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -102,7 +118,9 @@ class RemainUseDay extends ConsumerWidget {
               final product = products[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.1),
                   child: FoodIcon(iconIdentifier: product.iconAdress, size: 22),
                 ),
                 title: Text(product.foodName ?? '이름 없음'),
@@ -117,14 +135,15 @@ class RemainUseDay extends ConsumerWidget {
                 },
               );
             },
-            separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+            separatorBuilder: (context, index) =>
+                const Divider(height: 1, indent: 16, endIndent: 16),
           ),
         ],
       ),
     );
   }
 
-  // 소비기한 임박 음식이 없을 때 보여줄 화면
+  // 사용예정일 임박 음식이 없을 때 보여줄 화면
   Widget _buildEmptyList() {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -136,17 +155,25 @@ class RemainUseDay extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline_rounded, size: 80, color: Colors.green.shade400),
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 80,
+                    color: Colors.green.shade400,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     '훌륭해요!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '현재 소비기한이 임박한 음식이 없어요.\n안심하고 오늘 하루를 즐기세요!',
+                    '현재 사용예정일이 임박한 음식이 없어요.\n안심하고 오늘 하루를 즐기세요!',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),

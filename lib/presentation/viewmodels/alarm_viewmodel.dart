@@ -23,22 +23,28 @@ class AlarmViewModel extends StateNotifier<AsyncValue<List<Alam>>> {
 
   Future<void> addAlarm(Alam alam) async {
     final newId = await _repository.insertAlarm(alam);
-    if(newId == -1) return; // DB 저장 실패 시 중단
+    if (newId == -1) return; // DB 저장 실패 시 중단
 
     try {
       final dateParts = alam.alamDate!.split('-');
       final timeParts = alam.alamTime!.split(':');
-      final y = int.parse(dateParts[0]), m = int.parse(dateParts[1]), d = int.parse(dateParts[2]);
+      final y = int.parse(dateParts[0]),
+          m = int.parse(dateParts[1]),
+          d = int.parse(dateParts[2]);
       final h = int.parse(timeParts[0]), min = int.parse(timeParts[1]);
 
       // DB에서 반환받은 newId를 알림 ID로 사용
       await LocalNotification.scheduled(
         newId,
-        '소비기한 알림',
-        '${alam.alamName}의 소비기한이 오늘까지입니다!',
-        y, m, d, h, min,
+        '사용예정일 알림',
+        '${alam.alamName}의 사용예정일이 오늘까지입니다!',
+        y,
+        m,
+        d,
+        h,
+        min,
       );
-    } catch(e) {
+    } catch (e) {
       // 에러 처리
     }
     fetchAlarms();

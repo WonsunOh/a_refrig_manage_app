@@ -18,8 +18,8 @@ class LongTermStorageFood extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('오래 보관한 음식'),
-        automaticallyImplyLeading:false, // 뒤로가기 버튼 숨김
+        title: const Text('장기보관 음식'),
+        // automaticallyImplyLeading:false, // 뒤로가기 버튼 숨김
             actions: [
               IconButton(
                 icon: const Icon(Icons.close),
@@ -38,7 +38,7 @@ class LongTermStorageFood extends ConsumerWidget {
           error: (err, stack) => Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다: $err')),
           data: (foods) {
             if (foods.isEmpty) {
-              return const Center(child: Text('오래 보관한 음식이 없습니다.'));
+              return const Center(child: Text('장기보관으로 설정된 음식이 없습니다.'));
             }
             return ListView.builder(
               itemCount: foods.length,

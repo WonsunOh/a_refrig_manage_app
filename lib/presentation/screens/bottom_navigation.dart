@@ -14,17 +14,13 @@ class BottomNavigation extends ConsumerWidget {
 
     // [수정] 새로운 탭 순서에 맞게 페이지 목록 변경
     const pages = <Widget>[
-      MyHome(),          // 인덱스 0: 나의 공간
+      MyHome(), // 인덱스 0: 나의 공간
       DashboardScreen(), // 인덱스 1: 홈 (구 대시보드)
-      RemainUseDay(),    // 인덱스 2: 소비기한
+      RemainUseDay(), // 인덱스 2: 사용예정일
     ];
 
-
     return Scaffold(
-      body: IndexedStack(
-        index: pageIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: pageIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: pageIndex,
@@ -46,7 +42,7 @@ class BottomNavigation extends ConsumerWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications_outlined),
             activeIcon: Icon(Icons.notifications),
-            label: '소비기한',
+            label: '사용예정일',
           ),
         ],
       ),
